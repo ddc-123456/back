@@ -55,7 +55,7 @@
     </el-header>
     <el-container>
       <el-aside>
-        <el-tree :data="classTree" :props="defaultProps" @node-click="handleNodeClick" :highlight-current="true"
+        <el-tree :data="classTree" :props="defaultProps" @node-click="handleNodeClick" :highlight-current="true" node-key="id" :default-expanded-keys="[1]"
                  style="margin:20px 0"></el-tree>
       </el-aside>
       <el-main style="min-width: 534px">
@@ -352,10 +352,11 @@
       getClass() {
         fetchStuList().then(res => {
           this.classTree = res.message
+          this.classTree[0].id = 1
+          console.log(this.classTree);
         })
       },
       handleNodeClick(data) {
-        console.log(data);
         if (data.children === null) {
           this.class = data.name
           this.getList({classes: this.class})
@@ -372,7 +373,6 @@
       },
       getSelectionList() {
         fetchStuSelectionList().then(res => {
-          console.log(res);
           const list = res.message
           this.class = list[0].classes[0]
           this.selection_list.class_list = list[0].classes
