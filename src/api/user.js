@@ -1,24 +1,29 @@
 import request from '@/utils/request'
 
+
 export function login(data) {
+
   return request({
-    url: '/vue-admin-template/user/login',
+    url: '/bsm/tlogin',
     method: 'post',
-    data
+    data:{
+      t_id: data.username,
+      t_pwd:data.password
+    }
   })
 }
 
 export function getInfo(token) {
   return request({
-    url: '/vue-admin-template/user/info',
+    url: '/bsm/prelogin',
     method: 'get',
-    params: { token }
+    params: {token}
   })
 }
 
 export function logout() {
   return request({
-    url: '/vue-admin-template/user/logout',
+    url: '/bsm/logout',
     method: 'post'
   })
 }

@@ -31,7 +31,8 @@
         width="200"
         trigger="hover"
         style="margin-left: 10px">
-        <div><span>导入的文件必须已一定的模板格式</span><a href="http://10.18.5.173:8080/bsm/writeModel" style="color: lightskyblue"> 下载模板</a></div>
+        <div><span>导入的文件必须已一定的模板格式</span><a href="http://10.18.5.173:8080/bsm/writeModel" style="color: lightskyblue">
+          下载模板</a></div>
         <el-button slot="reference" :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-upload2"
                    @click="handleUpload">
           导入
@@ -108,6 +109,11 @@
         width="150px" align="center"
         label="邮箱"
         prop="t_email"/>
+
+      <el-table-column
+        width="150px" align="center"
+        label="联系电话"
+        prop="t_phone"/>
 
       <el-table-column label="操作" align="center" width="150" class-name="small-padding fixed-width">
         <template slot-scope="{row,$index}">
@@ -189,14 +195,18 @@
           <el-input v-model="temp.t_email"/>
         </el-form-item>
 
+        <el-form-item label="联系电话:">
+          <el-input v-model="temp.t_phone"/>
+        </el-form-item>
+
       </el-form>
 
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">
-          {{ $t('table.cancel') }}
+          取消
         </el-button>
         <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">
-          {{ $t('table.confirm') }}
+          确认
         </el-button>
       </div>
     </el-dialog>
@@ -235,7 +245,8 @@
           t_stationt_: '',
           t_education: '',
           t_degree: '',
-          t_email: ''
+          t_email: '',
+          t_phone: ''
         },
         title: '',
         importance: '',
@@ -251,7 +262,7 @@
         dialogStatus: '',
         textMap: {
           update: '编辑',
-          create: '新建'
+          create: '添加'
         },
         importanceOptions: [
           {
@@ -263,10 +274,10 @@
           }, {
             value: 't_sex',
             label: '性别'
-          }, {
+          }, /*{
             value: 't_department',
             label: '院系'
-          }, /*{
+          },*/ /*{
             value: 't_birthday',
             label: '出生年月'
           }, */{
@@ -278,6 +289,10 @@
           }, {
             value: 't_degree',
             label: '学位'
+          },
+          {
+            value: 't_phone',
+            label: '联系电话'
           }/*, {
             value: 't_email',
             label: '邮箱'
@@ -285,22 +300,22 @@
         ],
         rules: {
           t_id: [
-            {required: true, message: '请输入教师工号', trigger: 'change'},
+            {required: true, message: '请输入教师工号,应由10个数字组成', trigger: 'change',min:10,max:10},
           ],
           t_name: [
-            {required: true, message: '请输入教师姓名', trigger: 'blur'},
+            {required: true, message: '请输入教师姓名', trigger: 'change'},
           ],
           t_sex: [
-            {required: true, message: '请输入教师性别', trigger: 'blur'},
+            {required: true, message: '请输入教师性别', trigger: 'change'},
           ],
           t_department: [
-            {required: true, message: '请输入院系', trigger: 'blur'},
+            {required: true, message: '请输入院系', trigger: 'change'},
           ],
           t_birthday: [
-            {required: true, message: '请输入教师生日', trigger: 'blur'},
+            {required: true, message: '请输入教师生日', trigger: 'change'},
           ],
           t_stationt_: [
-            {required: true, message: '请输入教师岗位', trigger: 'blur'},
+            {required: true, message: '请输入教师岗位', trigger: 'change'},
           ],
           t_education: [
             {required: true, message: '请输入教师学历', trigger: 'change'},
@@ -343,7 +358,8 @@
           t_stationt_: '',
           t_education: '',
           t_degree: '',
-          t_email: ''
+          t_email: '',
+          t_phone: ''
         }
       },
       handleUpdate(row) {
@@ -371,7 +387,7 @@
         this.$refs['form'].validate((valid) => {
           if (valid) {
             createArticle(this.temp).then(() => {
-              this.list.unshift(this.temp)
+              // this.list.unshift(this.temp)
               this.dialogFormVisible = false
               this.$notify({
                 title: '成功',
@@ -379,6 +395,7 @@
                 type: 'success',
                 duration: 2000
               })
+              this.getList({page: this.currentPage})
             })
           }
         })
@@ -388,10 +405,9 @@
           if (valid) {
             const tempData = Object.assign({}, this.temp)
             tempData.timestamp = +new Date(tempData.timestamp) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
-            console.log(tempData);
             updateArticle(tempData).then(() => {
               const index = this.list.findIndex(v => v.id === this.temp.id)
-              this.list.splice(index, 1, this.temp)
+              // this.list.splice(index, 1, this.temp)
               this.dialogFormVisible = false
               this.$notify({
                 title: '成功',
@@ -399,12 +415,14 @@
                 type: 'success',
                 duration: 2000
               })
+              this.getList({page: this.currentPage})
             })
           }
         })
       },
       handleCurrentChange(currentPage) {
         const query = Object.assign([], this.tags)
+        this.currentPage = currentPage
         this.getList({page: currentPage, query})
       },
 
@@ -438,6 +456,7 @@
       },
       handleClose(tag) {
         this.tags.splice(this.tags.indexOf(tag), 1);
+        this.getList({query: this.tags})
       },
 
       handleCreate() {

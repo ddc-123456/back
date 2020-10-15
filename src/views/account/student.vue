@@ -58,7 +58,7 @@
         <el-tree :data="classTree" :props="defaultProps" @node-click="handleNodeClick" :highlight-current="true"
                  style="margin:20px 0"></el-tree>
       </el-aside>
-      <el-main>
+      <el-main style="min-width: 534px">
         <el-table
           ref="multipleTable"
           :data="list"
@@ -104,10 +104,16 @@
             label="入学年份"
             prop="year_of_enrolme"/>
 
+          <!--          <el-table-column-->
+          <!--            width="150px" align="center"-->
+          <!--            label="密码"-->
+          <!--            prop="stu_pwd"/>-->
+
           <el-table-column
             width="150px" align="center"
-            label="密码"
-            prop="stu_pwd"/>
+            label="专业"
+            prop="specialtyName"/>
+
 
           <el-table-column
             width="180px" align="center"
@@ -160,11 +166,18 @@
         </el-form-item>
 
         <el-form-item label="院系:" prop="t_department">
-          <el-select v-model="temp.t_department" @change="specialtySelect">
+          <el-select v-model="temp.t_department" @change="departmentSelect">
             <el-option v-for="item in selection_list.department_list" :key="item.dep_id" :label="item.t_department"
                        :value="item.t_department"></el-option>
           </el-select>
         </el-form-item>
+
+        <!--        <el-form-item label="专业:" prop="stu_specialty">-->
+        <!--          <el-select v-model="temp.stu_specialty" @change="specialtySelect">-->
+        <!--            <el-option v-for="item in selection_list.specialty_list" :key="item.specialty_id" :label="item.specialty"-->
+        <!--                       :value="item.specialty"></el-option>-->
+        <!--          </el-select>-->
+        <!--        </el-form-item>-->
 
         <el-form-item label="班级:" prop="class_name">
           <el-select v-model="temp.class_name">
@@ -204,10 +217,10 @@
 
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">
-          {{ $t('table.cancel') }}
+          取消
         </el-button>
         <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">
-          {{ $t('table.confirm') }}
+          确认
         </el-button>
       </div>
     </el-dialog>
@@ -258,6 +271,7 @@
           class_name: '',
           t_department: '',
           year_of_enrolme: '',
+          stu_specialty: ''
         },
         title: '',
         importance: '',
@@ -271,7 +285,7 @@
         dialogStatus: '',
         textMap: {
           update: '编辑',
-          create: '新建'
+          create: '添加'
         },
         importanceOptions: [
           {
@@ -283,10 +297,10 @@
           }, {
             value: 'stu_sex',
             label: '性别'
-          }, {
+          }/*, {
             value: 't_department',
             label: '院系'
-          }, /*{
+          }*/, /*{
             value: 't_birthday',
             label: '出生年月'
           }, */{
@@ -305,7 +319,7 @@
         ],
         rules: {
           stu_id: [
-            {required: true, message: '请输入学生学号', trigger: 'change'},
+            {required: true, message: '请输入学生学号,应由10位数字组成', trigger: 'change', min: 10, max: 10},
           ],
           stu_name: [
             {required: true, message: '请输入学生姓名', trigger: 'blur'},
@@ -323,7 +337,7 @@
             {required: true, message: '请输入学生入学年份', trigger: 'blur'},
           ],
           stu_pwd: [
-            {required: true, message: '请输入学生密码', trigger: 'change'},
+            {required: false, message: '请输入学生密码', trigger: 'change'},
           ],
           class_name: [
             {required: true, message: '请选择学生班级', trigger: 'change'}
@@ -410,6 +424,7 @@
                 type: 'success',
                 duration: 2000
               })
+              this.getList({classes: this.class})
             })
           }
         })
@@ -429,6 +444,7 @@
                 type: 'success',
                 duration: 2000
               })
+              this.getList({classes: this.class})
             })
           }
         })
@@ -468,6 +484,7 @@
       },
       handleClose(tag) {
         this.tags.splice(this.tags.indexOf(tag), 1);
+        this.getList({query: this.tags})
       },
 
       handleCreate() {
@@ -520,7 +537,7 @@
       getRowKeys(row) {
         return row.t_id
       },
-      specialtySelect(value) {
+      departmentSelect(value) {
         if (value === '') {
           return this.$message.error('服务器未知错误')
         }
@@ -532,6 +549,9 @@
             break
           }
         }
+      },
+      specialtySelect() {
+
       }
     },
     created() {
