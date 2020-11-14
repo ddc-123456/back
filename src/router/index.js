@@ -78,6 +78,28 @@ export const constantRoutes = [
   },
 
   {
+    path: '/document',
+    component: Layout,
+    redirect: '/document/documentPlan',
+    name: 'document',
+    meta: {title: '教学文件', icon: 'education'},
+    children: [
+      {
+        path: 'documentPlan',
+        component: () => import('@/views/document/documentPlan'),
+        name: 'documentPlan',
+        meta: {title: '教学计划', icon: 'user'}
+      },
+      {
+        path: 'documentCriterion',
+        component: () => import('@/views/document/documentCriterion'),
+        name: 'documentCriterion',
+        meta: {title: '课程标准', icon: 'user'}
+      },
+    ]
+  },
+
+  {
     path: '/review',
     component: Layout,
     children: [
