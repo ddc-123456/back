@@ -16,3 +16,27 @@ export function fetchSelectionList() {
     method: 'get',
   })
 }
+
+export function uploadFile(formData) {
+  return request({
+    url: '/courseplan/fileupload',
+    method: 'post',
+    data:formData,
+  })
+}
+
+export function deleteArticle(data) {
+  return request({
+    url: '/courseplan/delete1',
+    method: 'post',
+    data
+  })
+}
+
+export function deleteArticleMore(data) {
+  return request({
+    url: '/courseplan/deletes',
+    method: 'post',
+    data: {courseList: data}
+  })
+}

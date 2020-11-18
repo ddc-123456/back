@@ -21,23 +21,23 @@
                  @click="handleCreate">
         添加
       </el-button>
-      <el-button :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download"
-                 @click="handleDownload">
-        导出
-      </el-button>
-      <el-popover
-        placement="top-start"
-        title="关于导入excel"
-        width="200"
-        trigger="hover"
-        style="margin-left: 10px">
-        <div><span>导入的文件必须已一定的模板格式</span><a href="http://10.18.5.173:8080/bsm/writeModel" style="color: lightskyblue">
-          下载模板</a></div>
-        <el-button slot="reference" :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-upload2"
-                   @click="handleUpload">
-          导入
-        </el-button>
-      </el-popover>
+      <!--      <el-button :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download"
+                       @click="handleDownload">
+              导出
+            </el-button>
+            <el-popover
+              placement="top-start"
+              title="关于导入excel"
+              width="200"
+              trigger="hover"
+              style="margin-left: 10px">
+              <div><span>导入的文件必须已一定的模板格式</span><a href="http://10.18.5.173:8080/bsm/writeModel" style="color: lightskyblue">
+                下载模板</a></div>
+              <el-button slot="reference" :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-upload2"
+                         @click="handleUpload">
+                导入
+              </el-button>
+            </el-popover>-->
       <input type="file" ref="upload" style="display:none;" @change="uploadChange">
 
       <el-popconfirm
@@ -104,12 +104,26 @@
             width="250px" align="center"
             label="授课计划"
             prop="teaching_plan"
-            show-overflow-tooltip/>
+            show-overflow-tooltip>
+            <template slot-scope="scope">
+              <a :href='"http://10.18.5.173:8080/file/teaching_plan/"+scope.row.teaching_plan'
+                 style="color: #3a8ee6;text-decoration: underline">{{scope.row.teaching_plan}}</a>
+            </template>
+
+          </el-table-column>
 
           <el-table-column
-            width="150px" align="center"
+            width="100px" align="center"
             label="提交状态"
-            prop="submit_state"/>
+            prop="submit_state"
+            :filters="[{ text: '未提交', value: '未提交' }, { text: '待审核', value: '待审核' }, { text: '未通过', value: '未通过' }, { text: '已提交', value: '已提交' }]"
+            :filter-method="filterTag">
+            <template slot-scope="scope">
+              <el-tag :type="tagType(scope.row)">
+                {{scope.row.submit_state}}
+              </el-tag>
+            </template>
+          </el-table-column>
 
           <el-table-column
             width="150px" align="center"
@@ -139,7 +153,7 @@
       background
     ></el-pagination>
 
-    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible" :close="dialogClose">
 
       <el-form ref="form" :rules="rules" :model="temp" label-position="left" label-width="100px"
                style="width: 400px; margin-left:50px;">
@@ -171,16 +185,22 @@
         </el-form-item>
 
         <el-form-item label="授课计划:" prop="teaching_plan">
+          <span>{{temp.teaching_plan}}</span>
           <el-upload
-            class="upload-demo"
             action="http://10.18.5.173:8080/courseplan/fileupload"
-            :on-preview="handlePreview"
-            :on-remove="handleRemove"
-            :before-remove="beforeRemove"
-            :on-exceed="handleExceed"
-            :file-list="fileList">
+            :file-list="fileList"
+            ref="upload"
+            :limit="1"
+            :data="{'data':tempStr}"
+            accept=".doc,.docx"
+            :auto-upload="false"
+            :on-success="uploadSuccess"
+            :on-error="uploadError"
+            :before-upload="beforeUpload"
+            name="upload"
+          >
             <el-button size="small" type="primary">点击上传</el-button>
-            <div slot="tip" class="el-upload__tip">只能上传jpg/png文件，且不超过500kb</div>
+            <div slot="tip" class="el-upload__tip">只能上传.doc,.docx文件，且不超过100mb</div>
           </el-upload>
         </el-form-item>
 
@@ -195,20 +215,17 @@
         </el-button>
       </div>
     </el-dialog>
-
   </div>
 </template>
 
 <script>
   import {
     createArticle,
-    deleteArticle,
     updateArticle,
-    deleteArticleMore,
     exportExcel, batchExport
   } from "@/api/article";
 
-  import {fetchList, fetchSelectionList} from "@/api/document";
+  import {fetchList, fetchSelectionList, uploadFile, deleteArticle, deleteArticleMore} from "@/api/document";
 
 
   export default {
@@ -282,9 +299,6 @@
           t_id: [
             {required: true, message: '请输入教师工号,应由10个数字组成', trigger: 'change', min: 10, max: 10},
           ],
-          t_name: [
-            {required: true, message: '请输入教师姓名', trigger: 'change'},
-          ],
           t_sex: [
             {required: true, message: '请输入教师性别', trigger: 'change'},
           ],
@@ -306,13 +320,13 @@
 
         },
         downloadLoading: false,
-        uploadLoading: false
+        uploadLoading: false,
+        hasFile: false
       }
     },
     methods: {
       getList(data) {
         fetchList(data).then(res => {
-          console.log(res);
           this.list = res.message
           this.total = res.listQuery.total
           this.currentPage = res.listQuery.pageNum
@@ -320,6 +334,7 @@
           this.pageCount = res.listQuery.pages
         })
       },
+
       getSelectionList() {
         fetchSelectionList().then(res => {
           const list = res.message[0].children
@@ -344,18 +359,16 @@
 
       resetTemp() {
         this.temp = {
-          t_id: '',
+          id: 0,
+          term: '',
+          course_name: '',
+          specialtyName: '',
           t_name: '',
-          t_sex: '',
-          t_department: '',
-          t_birthday: '',
-          t_stationt_: '',
-          t_education: '',
-          t_degree: '',
-          t_email: '',
-          t_phone: ''
+          class_hour: '',
+          teaching_plan: '',
         }
       },
+
       handleUpdate(row) {
         this.temp = Object.assign({}, row) //ES6语法，用于对象合并
         this.dialogStatus = 'update'
@@ -377,43 +390,40 @@
           this.getList({page: this.currentPage})
         })
       },
+
       createData() {
         this.$refs['form'].validate((valid) => {
           if (valid) {
-            createArticle(this.temp).then(() => {
-              // this.list.unshift(this.temp)
-              this.dialogFormVisible = false
+            this.$refs.upload.submit()
+          }
+        })
+      },
+
+      async updateData() {
+        this.$refs['form'].validate((valid) => {
+          if (valid) {
+            if (this.hasFile)
+              this.$refs.upload.submit()
+
+            const formData = new FormData()
+            formData.append('upload', '')
+            formData.append('data', this.tempStr)
+
+            uploadFile(formData).then(() => {
               this.$notify({
                 title: '成功',
                 message: '创建成功',
                 type: 'success',
                 duration: 2000
               })
-              this.getList({page: this.currentPage})
             })
           }
         })
+        this.getList({page: this.currentPage, query: this.tags})
+        this.$refs.upload.clearFiles()
+        this.dialogFormVisible = false
       },
-      updateData() {
-        this.$refs['form'].validate((valid) => {
-          if (valid) {
-            const tempData = Object.assign({}, this.temp)
-            tempData.timestamp = +new Date(tempData.timestamp) // change Thu Nov 30 2017 16:41:05 GMT+0800 (CST) to 1512031311464
-            updateArticle(tempData).then(() => {
-              const index = this.list.findIndex(v => v.id === this.temp.id)
-              // this.list.splice(index, 1, this.temp)
-              this.dialogFormVisible = false
-              this.$notify({
-                title: '成功',
-                message: '更新成功',
-                type: 'success',
-                duration: 2000
-              })
-              this.getList({page: this.currentPage})
-            })
-          }
-        })
-      },
+
       handleCurrentChange(currentPage) {
         const query = Object.assign([], this.tags)
         this.currentPage = currentPage
@@ -448,6 +458,7 @@
         this.title = ''
         this.importance = ''
       },
+
       handleClose(tag) {
         this.tags.splice(this.tags.indexOf(tag), 1);
         this.getList({query: this.tags})
@@ -471,7 +482,6 @@
       },
 
       uploadChange(data) {
-        console.log(data);
 
         let file = data.target.files[0]
         if (!file) return
@@ -483,9 +493,11 @@
           console.log(err);
         })
       },
+
       handleUpload() {
         this.$refs.upload.click();
       },
+
       handleDeleteMore() {
         deleteArticleMore(this.multipleSelection).then(res => {
           this.$notify({
@@ -495,22 +507,60 @@
             duration: 2000
           })
           this.getList({page: this.currentPage})
+          this.$refs.multipleTable.clearSelection();
         })
       },
+
       handleSelectionChange(val) {
         this.multipleSelection = val;
       },
+
       getRowKeys(row) {
-        return row.t_id
+
+        return row.id
       },
-      handlePreview() {
+      uploadSuccess() {
+        this.dialogFormVisible = false
+        this.$notify({
+          title: '成功',
+          message: '创建成功',
+          type: 'success',
+          duration: 2000
+        })
+        this.getList({page: this.currentPage, query: this.tags})
       },
-      handleRemove() {
+      uploadError() {
+        this.$notify({
+          title: '失败',
+          message: '创建失败，文件格式不符或文件大于100mb',
+          type: 'error',
+          duration: 20000
+        })
       },
-      beforeRemove() {
+      beforeUpload(file) {
+        if (file) {
+          this.hasFile = true
+        }
       },
-      handleExceed() {
+      dialogClose() {
+        this.$refs.upload.clearFiles()
       },
+      filterTag(value, row) {
+        return row.submit_state === value;
+      },
+      tagType: function (row) {
+        switch (row.submit_state) {
+          case '已提交':
+            return 'success';
+          case '未提交':
+            return 'info';
+          case '待审核':
+            return 'warning';
+          case '未通过':
+            return 'danger';
+        }
+      }
+
     },
     created() {
       this.getSelectionList()
@@ -521,9 +571,13 @@
         this.$nextTick(() => {
           const size = this.$refs.tab
           const preSize = this.$refs.elTab
-
           size.style.height = preSize.clientHeight + 'px'
         })
+      }
+    },
+    computed: {
+      tempStr: function () {
+        return JSON.stringify(this.temp)
       }
     }
   }

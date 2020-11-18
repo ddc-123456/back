@@ -535,7 +535,7 @@
         this.multipleSelection = val;
       },
       getRowKeys(row) {
-        return row.t_id
+        return row.stu_id
       },
       departmentSelect(value) {
         if (value === '') {

@@ -477,8 +477,6 @@
       },
 
       uploadChange(data) {
-        console.log(data);
-
         let file = data.target.files[0]
         if (!file) return
 
@@ -501,6 +499,7 @@
             duration: 2000
           })
           this.getList({page: this.currentPage})
+          this.$refs.multipleTable.clearSelection();
         })
       },
       handleSelectionChange(val) {
