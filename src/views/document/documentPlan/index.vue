@@ -115,9 +115,7 @@
           <el-table-column
             width="100px" align="center"
             label="提交状态"
-            prop="submit_state"
-            :filters="[{ text: '未提交', value: '未提交' }, { text: '待审核', value: '待审核' }, { text: '未通过', value: '未通过' }, { text: '已提交', value: '已提交' }]"
-            :filter-method="filterTag">
+            prop="submit_state">
             <template slot-scope="scope">
               <el-tag :type="tagType(scope.row)">
                 {{scope.row.submit_state}}
@@ -196,7 +194,7 @@
             :auto-upload="false"
             :on-success="uploadSuccess"
             :on-error="uploadError"
-            :before-upload="beforeUpload"
+            :on-change="fileChange"
             name="upload"
           >
             <el-button size="small" type="primary">点击上传</el-button>
@@ -271,53 +269,28 @@
           }, {
             value: 't_name',
             label: '任课教师'
-          }, /*{
-            value: 't_department',
-            label: '院系'
-          },*/ /*{
-            value: 't_birthday',
-            label: '出生年月'
-          }, */{
-            value: 't_stationt_',
-            label: '岗位'
           }, {
-            value: 't_education',
-            label: '学历'
-          }, {
-            value: 't_degree',
-            label: '学位'
+            value: 'submit_state',
+            label: '提交状态'
           },
           {
-            value: 't_phone',
-            label: '联系电话'
-          }/*, {
-            value: 't_email',
-            label: '邮箱'
-          }*/
+            value: 'term',
+            label: '学期'
+          }
         ],
         rules: {
-          t_id: [
-            {required: true, message: '请输入教师工号,应由10个数字组成', trigger: 'change', min: 10, max: 10},
+          term: [
+            {required: true, message: '请输入学期', trigger: 'change'},
           ],
-          t_sex: [
-            {required: true, message: '请输入教师性别', trigger: 'change'},
+          course_name: [
+            {required: true, message: '请输入课程名称', trigger: 'change'},
           ],
-          t_department: [
-            {required: true, message: '请输入院系', trigger: 'change'},
+          specialtyName: [
+            {required: true, message: '开设专业', trigger: 'change'},
           ],
-          t_birthday: [
-            {required: true, message: '请输入教师生日', trigger: 'change'},
+          t_name: [
+            {required: true, message: '请输入授课教师', trigger: 'change'},
           ],
-          t_stationt_: [
-            {required: true, message: '请输入教师岗位', trigger: 'change'},
-          ],
-          t_education: [
-            {required: true, message: '请输入教师学历', trigger: 'change'},
-          ],
-          t_degree: [
-            {required: true, message: '请输入教师学位', trigger: 'change'},
-          ],
-
         },
         downloadLoading: false,
         uploadLoading: false,
@@ -375,6 +348,8 @@
         this.dialogFormVisible = true
         this.$nextTick(() => {
           this.$refs['form'].clearValidate()
+          this.$refs.upload.clearFiles()
+          this.hasFile = false
         })
       },
 
@@ -391,19 +366,15 @@
         })
       },
 
+
+      //创建和更新本质上是想个一摸一样的函数
       createData() {
         this.$refs['form'].validate((valid) => {
           if (valid) {
-            this.$refs.upload.submit()
-          }
-        })
-      },
-
-      async updateData() {
-        this.$refs['form'].validate((valid) => {
-          if (valid) {
-            if (this.hasFile)
+            if (this.hasFile) {
               this.$refs.upload.submit()
+              return
+            }
 
             const formData = new FormData()
             formData.append('upload', '')
@@ -416,11 +387,36 @@
                 type: 'success',
                 duration: 2000
               })
+              this.getList({page: this.currentPage, query: this.tags})
             })
           }
         })
-        this.getList({page: this.currentPage, query: this.tags})
-        this.$refs.upload.clearFiles()
+        this.dialogFormVisible = false
+      },
+
+      updateData() {
+        this.$refs['form'].validate((valid) => {
+          if (valid) {
+            if (this.hasFile) {
+              this.$refs.upload.submit()
+              return
+            }
+
+            const formData = new FormData()
+            formData.append('upload', '')
+            formData.append('data', this.tempStr)
+
+            uploadFile(formData).then(() => {
+              this.$notify({
+                title: '成功',
+                message: '更新成功',
+                type: 'success',
+                duration: 2000
+              })
+              this.getList({page: this.currentPage, query: this.tags})
+            })
+          }
+        })
         this.dialogFormVisible = false
       },
 
@@ -470,6 +466,8 @@
         this.dialogFormVisible = true
         this.$nextTick(() => {
           this.$refs['form'].clearValidate()
+          this.$refs.upload.clearFiles()
+          this.hasFile = false
         })
       },
 
@@ -537,7 +535,7 @@
           duration: 20000
         })
       },
-      beforeUpload(file) {
+      fileChange(file, fileList) {
         if (file) {
           this.hasFile = true
         }
