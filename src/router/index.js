@@ -104,10 +104,31 @@ export const constantRoutes = [
     component: Layout,
     children: [
       {
-        path: 'index',
+        path: 'review',
         component: () => import('@/views/review/review'),
         name: 'review',
         meta: {title: '审核', icon: 'el-icon-s-claim'}
+      }
+    ]
+  },
+
+  {
+    path: '/test',
+    component: Layout,
+    meta: {title: '一些测试的功能', icon: 'el-icon-s-claim'},
+    redirect: '/test/eCharts',
+    children: [
+      {
+        path: 'eCharts',
+        component: () => import('@/views/test/eCharts'),
+        name: 'eCharts',
+        meta: {title: 'eCharts', icon: 'el-icon-s-claim'},
+      },
+      {
+        path: 'danmu',
+        component: () => import('@/views/test/danmu'),
+        name: 'danmu',
+        meta: {title: 'danmu', icon: 'el-icon-s-claim'},
       }
     ]
   },

@@ -106,7 +106,7 @@
             prop="teaching_plan"
             show-overflow-tooltip>
             <template slot-scope="scope">
-              <a :href='"http://10.18.5.173:8080/file/teaching_plan/"+scope.row.teaching_plan'
+              <a :href='"http://10.18.1.41:8086/file/teaching_plan/"+scope.row.teaching_plan'
                  style="color: #3a8ee6;text-decoration: underline">{{scope.row.teaching_plan}}</a>
             </template>
 
@@ -185,7 +185,7 @@
         <el-form-item label="授课计划:" prop="teaching_plan">
           <span>{{temp.teaching_plan}}</span>
           <el-upload
-            action="http://10.18.5.173:8080/courseplan/fileupload"
+            action="http://10.18.1.41:8086/courseplan/fileupload"
             :file-list="fileList"
             ref="upload"
             :limit="1"
@@ -474,7 +474,7 @@
       handleDownload() {
         this.downloadLoading = true
         let a = document.createElement('a')
-        a.href = `http://10.18.5.173:8080/bsm/writeExcel`
+        a.href = `http://10.18.5.173:8086/bsm/writeExcel`
         a.click()
         this.downloadLoading = false
       },

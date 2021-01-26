@@ -31,7 +31,7 @@
         width="200"
         trigger="hover"
         style="margin-left: 10px">
-        <div><span>导入的文件必须已一定的模板格式</span><a href="http://10.18.5.173:8080/bsm/writeModel" style="color: lightskyblue">
+        <div><span>导入的文件必须已一定的模板格式</span><a href="http://10.18.1.41:8086/bsm/writeModel" style="color: lightskyblue">
           下载模板</a></div>
         <el-button slot="reference" :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-upload2"
                    @click="handleUpload">
@@ -471,7 +471,7 @@
       handleDownload() {
         this.downloadLoading = true
         let a = document.createElement('a')
-        a.href = `http://10.18.5.173:8080/bsm/writeExcel`
+        a.href = `http://10.18.1.41:8086/bsm/writeExcel`
         a.click()
         this.downloadLoading = false
       },

@@ -32,7 +32,7 @@
           width="200"
           trigger="hover"
           style="margin-left: 10px">
-          <div><span>导入的文件必须已一定的模板格式</span><a href="http://10.18.5.173:8080/bsmstu/writeModel"
+          <div><span>导入的文件必须已一定的模板格式</span><a href="http://10.18.1.41:8086/bsmstu/writeModel"
                                               style="color: lightskyblue">
             下载模板</a></div>
           <el-button slot="reference" :loading="downloadLoading" class="filter-item" type="primary"
@@ -409,7 +409,7 @@
             duration: 2000
           })
           this.list.splice(index, 1)
-          this.getList({page: this.currentPage})
+          this.getList({classes: this.class,page: this.currentPage})
         })
       },
       createData() {
@@ -499,7 +499,7 @@
       handleDownload() {
         this.downloadLoading = true
         let a = document.createElement('a')
-        a.href = `http://10.18.5.173:8080/bsmstu/writeExcel`
+        a.href = `http://10.18.1.41:8086/bsmstu/writeExcel`
         a.click()
         this.downloadLoading = false
       },
